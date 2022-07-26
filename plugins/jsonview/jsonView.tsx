@@ -1,9 +1,14 @@
-import {Card, Text} from '@sanity/ui'
+import {Card, Code} from '@sanity/ui'
+import {InputProps} from 'sanity'
 
-export function JsonView() {
+/**
+ * - Typed input props! Hooray!
+ * - Use syntax highlighting through @sanity/ui's `<Code />`
+ */
+export function JsonView(props: InputProps) {
   return (
     <Card>
-      <Text>Hello from a custom input component!</Text>
+      <Code language="json">{JSON.stringify(props.value, null, 2)}</Code>
     </Card>
   )
 }
