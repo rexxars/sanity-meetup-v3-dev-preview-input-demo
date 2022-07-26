@@ -3,7 +3,7 @@ import {ReactNode, useState} from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 
 /**
- * - Only render switch on leaf nodes, not on object itself
+ * - Add hovering state with visual feedback
  */
 export const jsonView = createPlugin({
   name: 'json-view',
@@ -24,6 +24,7 @@ export const jsonView = createPlugin({
 
 function JsonView(props: InputProps & {children: ReactNode}) {
   const [showJson, setShowJson] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const user = useCurrentUser()
   const userIsDeveloper = user?.roles.some((role) => role.name === 'developer')
 
@@ -32,9 +33,13 @@ function JsonView(props: InputProps & {children: ReactNode}) {
   }
 
   return (
-    <Stack space={2}>
+    <Stack
+      space={2}
+      onMouseOver={() => setIsHovering(true)}
+      onMouseOut={() => setIsHovering(false)}
+    >
       <Inline space={2} style={{textAlign: 'right'}}>
-        <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
+        <Switch checked={isHovering} onChange={() => setShowJson((current) => !current)} />
         <Text>Show JSON</Text>
       </Inline>
 
