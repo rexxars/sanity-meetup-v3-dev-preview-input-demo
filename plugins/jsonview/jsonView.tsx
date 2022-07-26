@@ -1,12 +1,18 @@
 import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
 import {useState} from 'react'
-import {useCurrentUser} from 'sanity'
+import {createPlugin, useCurrentUser} from 'sanity'
 import {PortableTextInput, PortableTextInputProps} from 'sanity/form'
 
 /**
- * - Only render JSON option if users role is a developer
+ * - De-export JsonView, remove from schema
+ * - use `createPlugin` to create an empty plugin (for now)
+ * - Add plugin in `sanity.config.ts`
  */
-export function JsonView(props: PortableTextInputProps) {
+export const jsonView = createPlugin({
+  name: 'json-view',
+})
+
+function JsonView(props: PortableTextInputProps) {
   const [showJson, setShowJson] = useState(false)
   const user = useCurrentUser()
   const userIsDeveloper = user?.roles.some((role) => role.name === 'developer')

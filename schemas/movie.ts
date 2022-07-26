@@ -1,5 +1,4 @@
 import {MdLocalMovies as icon} from 'react-icons/md'
-import {JsonView} from '../plugins/jsonview/jsonView'
 
 export default {
   name: 'movie',
@@ -25,9 +24,6 @@ export default {
       name: 'overview',
       title: 'Overview',
       type: 'blockContent',
-      components: {
-        input: JsonView,
-      },
     },
     {
       name: 'releaseDate',

@@ -1,5 +1,6 @@
 import {createConfig} from 'sanity'
 import {deskTool} from 'sanity/desk'
+import {jsonView} from './plugins/jsonview/jsonView'
 import {schemaTypes} from './schemas'
 
 export default createConfig({
@@ -9,7 +10,7 @@ export default createConfig({
   projectId: 'd3o6sbwv',
   dataset: 'production',
 
-  plugins: [deskTool()],
+  plugins: [deskTool(), jsonView()],
 
   schema: {
     types: schemaTypes,
