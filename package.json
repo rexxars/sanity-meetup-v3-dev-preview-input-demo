@@ -12,6 +12,7 @@
     "sanity"
   ],
   "dependencies": {
+    "@sanity/ui": "^0.37.12",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-icons": "^3.11.0",
