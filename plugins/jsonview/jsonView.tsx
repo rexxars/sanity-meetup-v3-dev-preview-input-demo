@@ -4,12 +4,20 @@ import {createPlugin, useCurrentUser} from 'sanity'
 import {PortableTextInput, PortableTextInputProps} from 'sanity/form'
 
 /**
- * - De-export JsonView, remove from schema
- * - use `createPlugin` to create an empty plugin (for now)
- * - Add plugin in `sanity.config.ts`
+ * - Implement `renderInput` - notice that even _document_ is an input
+ * - Check for document type, render default if so
  */
 export const jsonView = createPlugin({
   name: 'json-view',
+  form: {
+    renderInput(props, next) {
+      if (props.schemaType.type?.name === 'document') {
+        return next(props)
+      }
+
+      return <div>INPUT!</div>
+    },
+  },
 })
 
 function JsonView(props: PortableTextInputProps) {
