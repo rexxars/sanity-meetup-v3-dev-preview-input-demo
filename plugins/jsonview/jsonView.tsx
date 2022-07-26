@@ -1,11 +1,10 @@
 import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
-import {useState} from 'react'
-import {createPlugin, useCurrentUser} from 'sanity'
-import {PortableTextInput, PortableTextInputProps} from 'sanity/form'
+import {ReactNode, useState} from 'react'
+import {createPlugin, InputProps, useCurrentUser} from 'sanity'
 
 /**
- * - Implement `renderInput` - notice that even _document_ is an input
- * - Check for document type, render default if so
+ * - Adjust JsonView to be agnostic to field type and take children
+ * - Pass down children to JsonView
  */
 export const jsonView = createPlugin({
   name: 'json-view',
@@ -15,18 +14,18 @@ export const jsonView = createPlugin({
         return next(props)
       }
 
-      return <div>INPUT!</div>
+      return <JsonView {...props}>{next(props)}</JsonView>
     },
   },
 })
 
-function JsonView(props: PortableTextInputProps) {
+function JsonView(props: InputProps & {children: ReactNode}) {
   const [showJson, setShowJson] = useState(false)
   const user = useCurrentUser()
   const userIsDeveloper = user?.roles.some((role) => role.name === 'developer')
 
   if (!userIsDeveloper) {
-    return <PortableTextInput {...props} />
+    return <>{props.children}</>
   }
 
   return (
@@ -39,7 +38,7 @@ function JsonView(props: PortableTextInputProps) {
       {showJson ? (
         <Code language="json">{JSON.stringify(props.value, null, 2)}</Code>
       ) : (
-        <PortableTextInput {...props} />
+        props.children
       )}
     </Stack>
   )
