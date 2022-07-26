@@ -1,16 +1,19 @@
 import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
 import {ReactNode, useState} from 'react'
-import {createPlugin, InputProps, useCurrentUser} from 'sanity'
+import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 
 /**
- * - Adjust JsonView to be agnostic to field type and take children
- * - Pass down children to JsonView
+ * - Only render switch on leaf nodes, not on object itself
  */
 export const jsonView = createPlugin({
   name: 'json-view',
   form: {
     renderInput(props, next) {
       if (props.schemaType.type?.name === 'document') {
+        return next(props)
+      }
+
+      if (isObjectSchemaType(props.schemaType)) {
         return next(props)
       }
 
