@@ -10,7 +10,7 @@ export default createConfig({
   projectId: 'd3o6sbwv',
   dataset: 'production',
 
-  plugins: [deskTool(), jsonView()],
+  plugins: [deskTool(), jsonView({allowEditing: true})],
 
   schema: {
     types: schemaTypes,

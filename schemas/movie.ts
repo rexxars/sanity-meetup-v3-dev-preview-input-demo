@@ -60,6 +60,12 @@ export default {
       type: 'array',
       of: [{type: 'crewMember'}],
     },
+    {
+      name: 'description',
+      title: 'Description',
+      type: 'text',
+      hidden: true,
+    },
   ],
   preview: {
     select: {

@@ -1,14 +1,15 @@
-import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
+import {Code, Inline, Stack, Switch, Text, TextArea} from '@sanity/ui'
 import {createContext, ReactNode, useCallback, useContext, useEffect, useState} from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
+export interface JsonViewOptions {
+  allowEditing?: boolean
+}
 
 /**
- * - Wrap document inputs in `DocumentWithJsonViewControl`
- * - Move JSON switch to `DocumentWithJsonViewControl` (top of document)
- * - Pass down switch state through context
- * - Show JSON view if context says to do so!
+ * - Add plugin options, and pass it down to JsonView component
+ * - Use <TextArea> instead of <Code> if `allowEditing` option is true
  */
-export const jsonView = createPlugin({
+export const jsonView = createPlugin((options: JsonViewOptions | void) => ({
   name: 'json-view',
   form: {
     renderInput(props, next) {
@@ -20,10 +21,14 @@ export const jsonView = createPlugin({
         return next(props)
       }
 
-      return <JsonView {...props}>{next(props)}</JsonView>
+      return (
+        <JsonView {...props} allowEditing={options?.allowEditing || false}>
+          {next(props)}
+        </JsonView>
+      )
     },
   },
-})
+}))
 
 const JsonViewContext = createContext(false)
 
@@ -64,14 +69,27 @@ function DocumentWithJsonViewControl({children}: {children: ReactNode}) {
   )
 }
 
-function JsonView(props: InputProps & {children: ReactNode}) {
+function JsonView(props: InputProps & {children: ReactNode; allowEditing: boolean}) {
   const showJson = useContext(JsonViewContext)
 
-  return showJson ? (
-    <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
-      {JSON.stringify(props.value, null, 2)}
-    </Code>
+  if (!showJson) {
+    return <>{props.children}</>
+  }
+
+  const value = stringify(props.value)
+  const lines = value.match(/\n/g)?.length || 1
+
+  return props.allowEditing ? (
+    <TextArea rows={Math.min(lines, 15)} style={{fontFamily: 'monospace'}}>
+      {value}
+    </TextArea>
   ) : (
-    <>{props.children}</>
+    <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
+      {value}
+    </Code>
   )
+}
+
+function stringify(value: unknown): string {
+  return JSON.stringify(value, null, 2)
 }
