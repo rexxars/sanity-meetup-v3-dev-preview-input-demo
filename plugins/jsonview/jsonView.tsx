@@ -1,16 +1,19 @@
-import {Box, Code, Inline, Stack, Switch, Text} from '@sanity/ui'
-import {ReactNode, useCallback, useEffect, useState} from 'react'
+import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
+import {createContext, ReactNode, useCallback, useContext, useEffect, useState} from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 
 /**
- * - Allow keyboard shortcut even for non-developers
+ * - Wrap document inputs in `DocumentWithJsonViewControl`
+ * - Move JSON switch to `DocumentWithJsonViewControl` (top of document)
+ * - Pass down switch state through context
+ * - Show JSON view if context says to do so!
  */
 export const jsonView = createPlugin({
   name: 'json-view',
   form: {
     renderInput(props, next) {
       if (props.schemaType.type?.name === 'document') {
-        return next(props)
+        return <DocumentWithJsonViewControl>{next(props)}</DocumentWithJsonViewControl>
       }
 
       if (isObjectSchemaType(props.schemaType)) {
@@ -22,7 +25,9 @@ export const jsonView = createPlugin({
   },
 })
 
-function JsonView(props: InputProps & {children: ReactNode}) {
+const JsonViewContext = createContext(false)
+
+function DocumentWithJsonViewControl({children}: {children: ReactNode}) {
   const [showJson, setShowJson] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const user = useCurrentUser()
@@ -42,25 +47,31 @@ function JsonView(props: InputProps & {children: ReactNode}) {
   }, [keyDownListener])
 
   return (
-    <Box onMouseOver={() => setIsHovering(true)} onMouseOut={() => setIsHovering(false)}>
-      {userIsDeveloper || showJson ? (
-        <Stack space={2}>
-          <Inline space={2} style={{textAlign: 'right'}}>
-            <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
-            <Text>Show JSON</Text>
-          </Inline>
-
-          {showJson ? (
-            <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
-              {JSON.stringify(props.value, null, 2)}
-            </Code>
-          ) : (
-            props.children
-          )}
-        </Stack>
-      ) : (
-        <>{props.children}</>
+    <Stack
+      space={2}
+      onMouseOver={() => setIsHovering(true)}
+      onMouseOut={() => setIsHovering(false)}
+    >
+      {(userIsDeveloper || showJson) && (
+        <Inline space={2} style={{textAlign: 'right'}}>
+          <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
+          <Text>Show JSON</Text>
+        </Inline>
       )}
-    </Box>
+
+      <JsonViewContext.Provider value={showJson}>{children}</JsonViewContext.Provider>
+    </Stack>
+  )
+}
+
+function JsonView(props: InputProps & {children: ReactNode}) {
+  const showJson = useContext(JsonViewContext)
+
+  return showJson ? (
+    <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
+      {JSON.stringify(props.value, null, 2)}
+    </Code>
+  ) : (
+    <>{props.children}</>
   )
 }
