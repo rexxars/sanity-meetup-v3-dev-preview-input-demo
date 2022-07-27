@@ -1,9 +1,9 @@
-import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
+import {Box, Code, Inline, Stack, Switch, Text} from '@sanity/ui'
 import {ReactNode, useCallback, useEffect, useState} from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 
 /**
- * - Add inspect keyboard shortcut listener (Ctrl+I/Meta+I)
+ * - Allow keyboard shortcut even for non-developers
  */
 export const jsonView = createPlugin({
   name: 'json-view',
@@ -41,26 +41,26 @@ function JsonView(props: InputProps & {children: ReactNode}) {
     return () => window.removeEventListener('keydown', keyDownListener)
   }, [keyDownListener])
 
-  if (!userIsDeveloper) {
-    return <>{props.children}</>
-  }
-
   return (
-    <Stack
-      space={2}
-      onMouseOver={() => setIsHovering(true)}
-      onMouseOut={() => setIsHovering(false)}
-    >
-      <Inline space={2} style={{textAlign: 'right'}}>
-        <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
-        <Text>Show JSON</Text>
-      </Inline>
+    <Box onMouseOver={() => setIsHovering(true)} onMouseOut={() => setIsHovering(false)}>
+      {userIsDeveloper || showJson ? (
+        <Stack space={2}>
+          <Inline space={2} style={{textAlign: 'right'}}>
+            <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
+            <Text>Show JSON</Text>
+          </Inline>
 
-      {showJson ? (
-        <Code language="json">{JSON.stringify(props.value, null, 2)}</Code>
+          {showJson ? (
+            <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
+              {JSON.stringify(props.value, null, 2)}
+            </Code>
+          ) : (
+            props.children
+          )}
+        </Stack>
       ) : (
-        props.children
+        <>{props.children}</>
       )}
-    </Stack>
+    </Box>
   )
 }
