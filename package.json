@@ -12,7 +12,10 @@
     "sanity"
   ],
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.0",
     "@sanity/ui": "^0.37.12",
+    "@uiw/codemirror-theme-okaidia": "^4.11.4",
+    "@uiw/react-codemirror": "^4.11.4",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-icons": "^3.11.0",

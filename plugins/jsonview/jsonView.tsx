@@ -1,7 +1,10 @@
-import {Code, Inline, Stack, Switch, Text, TextArea} from '@sanity/ui'
+import CodeMirror from '@uiw/react-codemirror'
+import {okaidia} from '@uiw/codemirror-theme-okaidia'
+import {json} from '@codemirror/lang-json'
+import {Box, Inline, Stack, Switch, Text} from '@sanity/ui'
 import {
   createContext,
-  FormEvent,
+  FocusEvent,
   ReactNode,
   useCallback,
   useContext,
@@ -10,15 +13,13 @@ import {
 } from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 import {set, unset} from 'sanity/form'
+
 export interface JsonViewOptions {
   allowEditing?: boolean
 }
 
 /**
- * - Keep a separate "edit state" for the editor based on initial value + changes
- * - Reset edit value on remote change, in case of multi-user edits
- * - Check for valid JSON when editing (by attempting to parse)
- * - Send patches to update field if JSON is valid
+ * - Add CodeMirror for proper editing and syntax highlighting!
  */
 export const jsonView = createPlugin((options: JsonViewOptions | void) => ({
   name: 'json-view',
@@ -43,6 +44,14 @@ export const jsonView = createPlugin((options: JsonViewOptions | void) => ({
 
 const INVALID_VALUE = Symbol.for('INVALID')
 const JsonViewContext = createContext(false)
+
+const codeMirrorExtensions = [json()]
+const codeMirrorOptions = {
+  autocompletion: false,
+  allowMultipleSelections: false,
+  lineNumbers: false,
+  highlightActiveLineGutter: false,
+}
 
 function DocumentWithJsonViewControl({children}: {children: ReactNode}) {
   const [showJson, setShowJson] = useState(false)
@@ -82,14 +91,14 @@ function DocumentWithJsonViewControl({children}: {children: ReactNode}) {
 }
 
 function JsonView(props: InputProps & {children: ReactNode; allowEditing: boolean}) {
-  const {value, onChange} = props
+  const {value, onChange, onFocus, onBlur, readOnly} = props
   const stringifiedValue = stringify(value)
 
+  const [highlightActiveLine, setHighlightActiveLine] = useState(false)
   const showJson = useContext(JsonViewContext)
   const [editValue, setEditValue] = useState(stringifiedValue)
   const onEditorChange = useCallback(
-    (evt: FormEvent<HTMLTextAreaElement>) => {
-      const newValue = evt.currentTarget.value
+    (newValue: string) => {
       setEditValue(newValue)
 
       if (newValue.trim() === '') {
@@ -105,6 +114,22 @@ function JsonView(props: InputProps & {children: ReactNode; allowEditing: boolea
     [onChange]
   )
 
+  const onEditorFocus = useCallback(
+    (evt: FocusEvent) => {
+      setHighlightActiveLine(true)
+      onFocus(evt)
+    },
+    [onFocus]
+  )
+
+  const onEditorBlur = useCallback(
+    (evt: FocusEvent) => {
+      setHighlightActiveLine(false)
+      onBlur(evt)
+    },
+    [onBlur]
+  )
+
   useEffect(() => {
     setEditValue(stringify(value))
   }, [value])
@@ -113,20 +138,19 @@ function JsonView(props: InputProps & {children: ReactNode; allowEditing: boolea
     return <>{props.children}</>
   }
 
-  const lines = stringifiedValue.match(/\n/g)?.length || 1
-
-  return props.allowEditing ? (
-    <TextArea
-      rows={Math.min(lines, 15)}
-      style={{fontFamily: 'monospace'}}
-      onChange={onEditorChange}
-    >
-      {editValue}
-    </TextArea>
-  ) : (
-    <Code language="json" style={{whiteSpace: 'pre-wrap'}}>
-      {stringifiedValue}
-    </Code>
+  return (
+    <Box>
+      <CodeMirror
+        value={editValue}
+        basicSetup={{...codeMirrorOptions, highlightActiveLine}}
+        extensions={codeMirrorExtensions}
+        onChange={onEditorChange}
+        theme={okaidia}
+        onFocus={onEditorFocus}
+        onBlur={onEditorBlur}
+        readOnly={readOnly || !props.allowEditing}
+      />
+    </Box>
   )
 }
 
