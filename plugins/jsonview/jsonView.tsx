@@ -1,9 +1,9 @@
 import {Code, Inline, Stack, Switch, Text} from '@sanity/ui'
-import {ReactNode, useState} from 'react'
+import {ReactNode, useCallback, useEffect, useState} from 'react'
 import {createPlugin, InputProps, isObjectSchemaType, useCurrentUser} from 'sanity'
 
 /**
- * - Add hovering state with visual feedback
+ * - Add inspect keyboard shortcut listener (Ctrl+I/Meta+I)
  */
 export const jsonView = createPlugin({
   name: 'json-view',
@@ -27,6 +27,19 @@ function JsonView(props: InputProps & {children: ReactNode}) {
   const [isHovering, setIsHovering] = useState(false)
   const user = useCurrentUser()
   const userIsDeveloper = user?.roles.some((role) => role.name === 'developer')
+  const keyDownListener = useCallback(
+    (ev: KeyboardEvent) =>
+      isHovering &&
+      (ev.metaKey || ev.ctrlKey) &&
+      ev.key === 'i' &&
+      setShowJson((current) => !current),
+    [isHovering]
+  )
+
+  useEffect(() => {
+    window.addEventListener('keydown', keyDownListener)
+    return () => window.removeEventListener('keydown', keyDownListener)
+  }, [keyDownListener])
 
   if (!userIsDeveloper) {
     return <>{props.children}</>
@@ -39,7 +52,7 @@ function JsonView(props: InputProps & {children: ReactNode}) {
       onMouseOut={() => setIsHovering(false)}
     >
       <Inline space={2} style={{textAlign: 'right'}}>
-        <Switch checked={isHovering} onChange={() => setShowJson((current) => !current)} />
+        <Switch checked={showJson} onChange={() => setShowJson((current) => !current)} />
         <Text>Show JSON</Text>
       </Inline>
 
